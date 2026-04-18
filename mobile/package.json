@@ -1,0 +1,36 @@
+{
+  "name": "mealmatch-mobile",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "dev": "npm run web",
+    "start": "npx expo start",
+    "start:8082": "npx expo start --port 8082",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web --port 8082",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "expo": "~54.0.0",
+    "expo-av": "^16.0.7",
+    "expo-file-system": "~19.0.17",
+    "expo-image-picker": "^17.0.8",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.4",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-web": "^0.21.0"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^13.2.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^25.5.2",
+    "@types/react": "~19.1.10",
+    "babel-preset-expo": "^54.0.6",
+    "jest-expo": "^54.0.13",
+    "react-test-renderer": "19.1.0",
+    "typescript": "^5.7.2"
+  }
+}

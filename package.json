@@ -1,0 +1,27 @@
+{
+  "name": "mealmatch",
+  "private": true,
+  "workspaces": ["api", "mobile"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:mobile\"",
+    "dev:live": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm --workspace api run dev",
+    "dev:mobile": "npm --workspace mobile run start:8082",
+    "dev:web": "npm --workspace mobile run web",
+    "build": "npm run build:api && npm run typecheck:mobile",
+    "build:api": "npm --workspace api run build",
+    "typecheck": "npm run typecheck:api && npm run typecheck:mobile",
+    "typecheck:api": "npm --workspace api run typecheck",
+    "typecheck:mobile": "npm --workspace mobile run typecheck",
+    "lint": "npm run typecheck",
+    "test": "npm run test:api && npm run test:mobile",
+    "test:api": "npm --workspace api run test",
+    "test:mobile": "npm --workspace mobile run test",
+    "deploy:dev": "npm --workspace api run deploy:dev",
+    "deploy:prod": "npm --workspace api run deploy:prod",
+    "arch:refresh": "node scripts/architecture-map.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

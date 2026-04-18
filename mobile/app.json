@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "MealMatch",
+    "slug": "mealmatch",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#fff7ed"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "web": {
+      "bundler": "metro",
+      "port": 8082
+    }
+  }
+}

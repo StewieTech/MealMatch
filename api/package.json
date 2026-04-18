@@ -1,0 +1,40 @@
+{
+  "name": "mealmatch-api",
+  "private": true,
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest --runInBand",
+    "deploy:dev": "npm run build && npx serverless deploy --config ../serverless.yml --stage dev --region ca-central-1",
+    "deploy:prod": "npm run build && npx serverless deploy --config ../serverless.yml --stage prod --region ca-central-1",
+    "print:dev": "npx serverless print --config ../serverless.yml --stage dev --region ca-central-1",
+    "print:prod": "npx serverless print --config ../serverless.yml --stage prod --region ca-central-1"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.907.0",
+    "@aws-sdk/s3-request-presigner": "^3.907.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5",
+    "openai": "^4.79.0",
+    "serverless-http": "^3.2.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.2",
+    "@types/supertest": "^6.0.3",
+    "jest": "^29.7.0",
+    "serverless": "^3.39.0",
+    "serverless-esbuild": "^1.55.1",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,67 @@
+service: mealmatch-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'ca-central-1'}
+  stage: ${opt:stage, 'dev'}
+  httpApi:
+    cors: true
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    AWS_REGION: ${self:provider.region}
+    SERVICE_SLUG: mealmatch
+    UPLOADS_BUCKET: mealmatch-uploads-${self:provider.stage}
+    MONGODB_URI: ${ssm:/mealmatch/${self:provider.stage}/MONGODB_URI}
+    MONGODB_DB: ${ssm:/mealmatch/${self:provider.stage}/MONGODB_DB}
+    OPENAI_API_KEY: ${ssm:/mealmatch/${self:provider.stage}/OPENAI_API_KEY}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource: arn:aws:s3:::mealmatch-uploads-${self:provider.stage}/*
+        - Effect: Allow
+          Action:
+            - s3:ListBucket
+          Resource: arn:aws:s3:::mealmatch-uploads-${self:provider.stage}
+
+functions:
+  api:
+    handler: api/src/lambda.handler
+    timeout: 30
+    events:
+      - httpApi: '*'
+
+plugins:
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node20
+    platform: node
+    external:
+      - aws-sdk
+
+resources:
+  Resources:
+    UploadsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: mealmatch-uploads-${self:provider.stage}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods:
+                - GET
+                - PUT
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
