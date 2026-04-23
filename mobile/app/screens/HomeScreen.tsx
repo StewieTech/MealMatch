@@ -1,3 +1,4 @@
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,11 +11,14 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import type { RootStackParamList } from '../../App';
 import { Mode, ModeTabs } from '../components/ModeTabs';
 import { fetchRecipeFromText } from '../lib/api';
 import { RecipeResponse } from '../types/recipe';
 
-export function HomeScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+export function HomeScreen({ navigation }: Props) {
   const [mode, setMode] = useState<Mode>('text');
   const [ingredientsText, setIngredientsText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,6 +43,10 @@ export function HomeScreen() {
 
   function handlePlaceholder(modeLabel: 'photo' | 'voice') {
     Alert.alert('Coming soon', `${modeLabel} flow is scaffolded and ready for implementation.`);
+  }
+
+  function handleStartVoiceFlow() {
+    navigation.navigate('VoiceFlow');
   }
 
   return (
@@ -81,9 +89,11 @@ export function HomeScreen() {
         {mode === 'voice' && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Voice mode</Text>
-            <Text style={styles.paragraph}>Record a quick list of ingredients. The endpoint and service seam are ready for the speech-to-ingredients implementation.</Text>
-            <Pressable onPress={() => handlePlaceholder('voice')} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Voice flow scaffolded</Text>
+            <Text style={styles.paragraph}>
+              Speak what is in your fridge. We&apos;ll transcribe, confirm ingredients, and suggest recipes.
+            </Text>
+            <Pressable onPress={handleStartVoiceFlow} style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Start voice flow</Text>
             </Pressable>
           </View>
         )}

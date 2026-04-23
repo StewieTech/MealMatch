@@ -1,7 +1,10 @@
 {
   "name": "mealmatch",
   "private": true,
-  "workspaces": ["api", "mobile"],
+  "workspaces": [
+    "api",
+    "mobile"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:mobile\"",
     "dev:live": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
@@ -18,10 +21,14 @@
     "test:api": "npm --workspace api run test",
     "test:mobile": "npm --workspace mobile run test",
     "deploy:dev": "npm --workspace api run deploy:dev",
+    "deploy:staging": "npm run build:api && npx serverless deploy --stage staging --region ca-central-1",
     "deploy:prod": "npm --workspace api run deploy:prod",
+    "deploy:web:staging": "set EXPO_PUBLIC_API_BASE_URL=https://3ijwda2ud0.execute-api.ca-central-1.amazonaws.com&& npm --workspace mobile run build:web && cd mobile && aws s3 sync dist s3://mealmatch-frontend-staging --delete --region ca-central-1 --no-cli-pager && aws cloudfront create-invalidation --distribution-id E2M4AWGSW0WDVY --paths \"/*\" --no-cli-pager",
+    "deploy:web:prod": "npm --workspace mobile run build:web && cd mobile && aws s3 sync dist s3://mealmatch-frontend-prod --delete --region ca-central-1 --no-cli-pager",
     "arch:refresh": "node scripts/architecture-map.js"
   },
   "devDependencies": {
-    "concurrently": "^9.0.1"
+    "concurrently": "^9.0.1",
+    "esbuild": "^0.28.0"
   }
 }

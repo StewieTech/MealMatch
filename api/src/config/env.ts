@@ -1,6 +1,10 @@
+import path from 'path';
 import dotenv from 'dotenv';
 
+// Load local api/.env first so it wins on conflicts, then fall back to the
+// monorepo root .env. dotenv does not overwrite already-set variables.
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 export const env = {
   port: Number(process.env.PORT || 4001),

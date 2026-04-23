@@ -8,6 +8,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest --runInBand",
     "deploy:dev": "npm run build && npx serverless deploy --config ../serverless.yml --stage dev --region ca-central-1",
+    "deploy:staging": "npm run build && npx serverless deploy --config ../serverless.yml --stage staging --region ca-central-1",
     "deploy:prod": "npm run build && npx serverless deploy --config ../serverless.yml --stage prod --region ca-central-1",
     "print:dev": "npx serverless print --config ../serverless.yml --stage dev --region ca-central-1",
     "print:prod": "npx serverless print --config ../serverless.yml --stage prod --region ca-central-1"

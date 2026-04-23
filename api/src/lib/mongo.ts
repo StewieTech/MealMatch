@@ -8,6 +8,8 @@ export async function connectToDatabase() {
   if (!connectPromise) {
     connectPromise = mongoose.connect(env.mongoUri, {
       dbName: env.mongoDb,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
     });
   }
   return connectPromise;

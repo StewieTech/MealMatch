@@ -7,12 +7,19 @@ provider:
   region: ${opt:region, 'ca-central-1'}
   stage: ${opt:stage, 'dev'}
   httpApi:
-    cors: true
+    cors:
+      allowedOrigins: ${self:custom.cors.allowedOrigins}
+      allowedMethods: ${self:custom.cors.allowedMethods}
+      allowedHeaders: ${self:custom.cors.allowedHeaders}
+      maxAge: ${self:custom.cors.maxAge}
   environment:
     NODE_ENV: ${self:provider.stage}
-    AWS_REGION: ${self:provider.region}
     SERVICE_SLUG: mealmatch
     UPLOADS_BUCKET: mealmatch-uploads-${self:provider.stage}
+    CORS_ALLOWED_ORIGINS: ${self:custom.cors.allowedOriginsCsv}
+    CORS_ALLOWED_METHODS: ${self:custom.cors.allowedMethodsCsv}
+    CORS_ALLOWED_HEADERS: ${self:custom.cors.allowedHeadersCsv}
+    CORS_MAX_AGE_SECONDS: ${self:custom.cors.maxAge}
     MONGODB_URI: ${ssm:/mealmatch/${self:provider.stage}/MONGODB_URI}
     MONGODB_DB: ${ssm:/mealmatch/${self:provider.stage}/MONGODB_DB}
     OPENAI_API_KEY: ${ssm:/mealmatch/${self:provider.stage}/OPENAI_API_KEY}
@@ -41,6 +48,31 @@ plugins:
   - serverless-esbuild
 
 custom:
+  cors:
+    allowedOrigins:
+      - https://d1jvmkdzx7bn57.cloudfront.net
+      - http://localhost:8082
+      - http://localhost:19006
+    allowedMethods:
+      - OPTIONS
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - HEAD
+    allowedHeaders:
+      - content-type
+      - authorization
+      - x-api-key
+      - x-amz-date
+      - x-amz-security-token
+      - x-amz-user-agent
+      - x-amzn-trace-id
+    maxAge: 86400
+    allowedOriginsCsv: https://d1jvmkdzx7bn57.cloudfront.net,http://localhost:8082,http://localhost:19006
+    allowedMethodsCsv: OPTIONS,GET,POST,PUT,PATCH,DELETE,HEAD
+    allowedHeadersCsv: content-type,authorization,x-api-key,x-amz-date,x-amz-security-token,x-amz-user-agent,x-amzn-trace-id
   esbuild:
     bundle: true
     minify: false
@@ -65,3 +97,79 @@ resources:
                 - '*'
               AllowedHeaders:
                 - '*'
+    FrontendBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: mealmatch-frontend-${self:provider.stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+    FrontendOriginAccessControl:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: mealmatch-frontend-oac-${self:provider.stage}
+          Description: OAC for MealMatch frontend bucket
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
+
+    FrontendDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          Comment: MealMatch frontend ${self:provider.stage}
+          DefaultRootObject: index.html
+          PriceClass: PriceClass_100
+          Origins:
+            - Id: FrontendS3Origin
+              DomainName: !GetAtt FrontendBucket.RegionalDomainName
+              S3OriginConfig: {}
+              OriginAccessControlId: !Ref FrontendOriginAccessControl
+          DefaultCacheBehavior:
+            TargetOriginId: FrontendS3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 0
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 0
+
+    FrontendBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: FrontendBucket
+        PolicyDocument:
+          Statement:
+            - Sid: AllowCloudFrontReadOnly
+              Effect: Allow
+              Principal:
+                Service: cloudfront.amazonaws.com
+              Action: s3:GetObject
+              Resource: arn:aws:s3:::mealmatch-frontend-${self:provider.stage}/*
+              Condition:
+                StringEquals:
+                  AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+
+  Outputs:
+    FrontendDistributionId:
+      Value: !Ref FrontendDistribution
+    FrontendDistributionDomainName:
+      Value: !GetAtt FrontendDistribution.DomainName
