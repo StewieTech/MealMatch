@@ -1,19 +1,50 @@
 import request from 'supertest';
 import { app } from '../app';
 
-const allowedWebOrigin = 'https://d1jvmkdzx7bn57.cloudfront.net';
+const allowedStagingWebOrigin = 'https://d1jvmkdzx7bn57.cloudfront.net';
 
 describe('POST /voice/transcribe', () => {
   it('handles CORS preflight for the staging web origin', async () => {
     const response = await request(app)
       .options('/voice/transcribe')
-      .set('Origin', allowedWebOrigin)
+      .set('Origin', allowedStagingWebOrigin)
       .set('Access-Control-Request-Method', 'POST')
       .set('Access-Control-Request-Headers', 'content-type');
 
     expect(response.status).toBe(200);
-    expect(response.headers['access-control-allow-origin']).toBe(allowedWebOrigin);
+    expect(response.headers['access-control-allow-origin']).toBe(allowedStagingWebOrigin);
     expect(response.headers['access-control-allow-methods']).toContain('POST');
+  });
+
+  it('handles CORS preflight for an env-provided production web origin', async () => {
+    const originalOrigins = process.env.CORS_ALLOWED_ORIGINS;
+    const allowedProdWebOrigin = 'https://prod-example.cloudfront.net';
+
+    process.env.CORS_ALLOWED_ORIGINS = [
+      allowedProdWebOrigin,
+      allowedStagingWebOrigin,
+      'http://localhost:8082',
+      'http://localhost:19006',
+    ].join(',');
+
+    try {
+      jest.resetModules();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { app: freshApp } = require('../app');
+      const response = await request(freshApp)
+        .options('/voice/transcribe')
+        .set('Origin', allowedProdWebOrigin)
+        .set('Access-Control-Request-Method', 'POST')
+        .set('Access-Control-Request-Headers', 'content-type');
+
+      expect(response.status).toBe(200);
+      expect(response.headers['access-control-allow-origin']).toBe(allowedProdWebOrigin);
+      expect(response.headers['access-control-allow-methods']).toContain('POST');
+    } finally {
+      if (originalOrigins === undefined) delete process.env.CORS_ALLOWED_ORIGINS;
+      else process.env.CORS_ALLOWED_ORIGINS = originalOrigins;
+      jest.resetModules();
+    }
   });
 
   it('rejects CORS preflight for unknown origins', async () => {

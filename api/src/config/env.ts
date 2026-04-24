@@ -13,4 +13,5 @@ export const env = {
   mongoUri: process.env.MONGODB_URI || '',
   mongoDb: process.env.MONGODB_DB || 'mealmatch_dev',
   openAiApiKey: process.env.OPENAI_API_KEY || '',
+  youTubeApiKey: process.env.YOUTUBE_API_KEY || '',
 };

@@ -4,7 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "dev": "npm run web",
-    "start": "npx expo start",
+    "start": "npx expo start --port 8082",
     "start:8082": "npx expo start --port 8082",
     "android": "expo start --android",
     "ios": "expo start --ios",

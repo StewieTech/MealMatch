@@ -1,5 +1,18 @@
 # Decision Log
 
+## 2026-04-23 - Parallel Staging and Production CloudFront Deployments
+
+### Decision
+Run staging and production as separate Serverless stages, each with its own private S3 frontend bucket and CloudFront distribution. Web deploy scripts read CloudFormation outputs for the stage API base URL and CloudFront distribution ID before building, syncing, and invalidating.
+
+### Why
+- Keeps staging and production live at the same time without custom domain or ACM setup.
+- Avoids hardcoding API URLs and CloudFront distribution IDs into npm scripts.
+- Lets Lambda CORS include the current stage CloudFront domain created by the same stack, while retaining the existing staging and localhost origins requested for prod testing.
+
+### Follow-up
+- Add custom domains and ACM later if the CloudFront default domains stop being acceptable for production.
+
 ## 2026-04-18 - Frontend HTTPS on Staging via CloudFront + S3 (OAC)
 
 ### Decision

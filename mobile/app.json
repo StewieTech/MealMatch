@@ -5,6 +5,15 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow MealMatch to access your photos so you can scan ingredients from your gallery.",
+          "cameraPermission": "Allow MealMatch to use your camera so you can take ingredient photos."
+        }
+      ]
+    ],
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#fff7ed"

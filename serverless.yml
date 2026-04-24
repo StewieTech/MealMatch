@@ -6,23 +6,24 @@ provider:
   runtime: nodejs20.x
   region: ${opt:region, 'ca-central-1'}
   stage: ${opt:stage, 'dev'}
-  httpApi:
-    cors:
-      allowedOrigins: ${self:custom.cors.allowedOrigins}
-      allowedMethods: ${self:custom.cors.allowedMethods}
-      allowedHeaders: ${self:custom.cors.allowedHeaders}
-      maxAge: ${self:custom.cors.maxAge}
   environment:
     NODE_ENV: ${self:provider.stage}
     SERVICE_SLUG: mealmatch
     UPLOADS_BUCKET: mealmatch-uploads-${self:provider.stage}
-    CORS_ALLOWED_ORIGINS: ${self:custom.cors.allowedOriginsCsv}
+    CORS_ALLOWED_ORIGINS:
+      Fn::Join:
+        - ','
+        - - !Sub 'https://${FrontendDistribution.DomainName}'
+          - https://d1jvmkdzx7bn57.cloudfront.net
+          - http://localhost:8082
+          - http://localhost:19006
     CORS_ALLOWED_METHODS: ${self:custom.cors.allowedMethodsCsv}
     CORS_ALLOWED_HEADERS: ${self:custom.cors.allowedHeadersCsv}
     CORS_MAX_AGE_SECONDS: ${self:custom.cors.maxAge}
     MONGODB_URI: ${ssm:/mealmatch/${self:provider.stage}/MONGODB_URI}
     MONGODB_DB: ${ssm:/mealmatch/${self:provider.stage}/MONGODB_DB}
     OPENAI_API_KEY: ${ssm:/mealmatch/${self:provider.stage}/OPENAI_API_KEY}
+    YOUTUBE_API_KEY: ${ssm:/mealmatch/${self:provider.stage}/YOUTUBE_API_KEY, ''}
   iam:
     role:
       statements:
@@ -49,10 +50,6 @@ plugins:
 
 custom:
   cors:
-    allowedOrigins:
-      - https://d1jvmkdzx7bn57.cloudfront.net
-      - http://localhost:8082
-      - http://localhost:19006
     allowedMethods:
       - OPTIONS
       - GET
@@ -70,7 +67,6 @@ custom:
       - x-amz-user-agent
       - x-amzn-trace-id
     maxAge: 86400
-    allowedOriginsCsv: https://d1jvmkdzx7bn57.cloudfront.net,http://localhost:8082,http://localhost:19006
     allowedMethodsCsv: OPTIONS,GET,POST,PUT,PATCH,DELETE,HEAD
     allowedHeadersCsv: content-type,authorization,x-api-key,x-amz-date,x-amz-security-token,x-amz-user-agent,x-amzn-trace-id
   esbuild:

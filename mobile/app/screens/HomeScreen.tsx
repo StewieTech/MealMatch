@@ -41,12 +41,12 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
-  function handlePlaceholder(modeLabel: 'photo' | 'voice') {
-    Alert.alert('Coming soon', `${modeLabel} flow is scaffolded and ready for implementation.`);
-  }
-
   function handleStartVoiceFlow() {
     navigation.navigate('VoiceFlow');
+  }
+
+  function handleStartPhotoFlow() {
+    navigation.navigate('PhotoFlow');
   }
 
   return (
@@ -79,9 +79,11 @@ export function HomeScreen({ navigation }: Props) {
         {mode === 'photo' && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Photo mode</Text>
-            <Text style={styles.paragraph}>Capture or pick a fridge photo, upload it, then send the image key to the scaffolded API route.</Text>
-            <Pressable onPress={() => handlePlaceholder('photo')} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Photo flow scaffolded</Text>
+            <Text style={styles.paragraph}>
+              Scan your fridge or counter and we&apos;ll detect ingredients and suggest a video recipe.
+            </Text>
+            <Pressable onPress={handleStartPhotoFlow} style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Start photo flow</Text>
             </Pressable>
           </View>
         )}
