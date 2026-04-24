@@ -11,7 +11,14 @@ function Run-Step {
   )
 
   Write-Host "==> $Title"
+  $global:LASTEXITCODE = 0
   & $Action
+  if (-not $?) {
+    throw "Step failed: $Title"
+  }
+  if ($global:LASTEXITCODE -ne 0) {
+    throw "Step failed with exit code $LASTEXITCODE: $Title"
+  }
 }
 
 function Get-TrimmedOutput {
@@ -90,6 +97,11 @@ try {
     git fetch $remote
   }
 
+  $remoteReleaseRootSha = Get-RemoteBranchSha -Remote $remote -BranchName 'release'
+  if ($remoteReleaseRootSha) {
+    throw "Remote branch 'release' exists. Rename/delete it before using 'release/YYYY-MM-DD' naming."
+  }
+
   Ensure-MasterCheckedOut
 
   Run-Step -Title "Fast-forwarding local master from origin/master" -Action {
@@ -128,24 +140,12 @@ try {
     }
   }
 
-  $localReleaseRef = "refs/heads/$releaseBranch"
-  & git show-ref --verify --quiet $localReleaseRef
-  if ($LASTEXITCODE -eq 0) {
-    Run-Step -Title "Updating local $releaseBranch" -Action {
-      git branch -f $releaseBranch $headCommit
-    }
-  } else {
-    Run-Step -Title "Creating local $releaseBranch" -Action {
-      git branch $releaseBranch $headCommit
-    }
-  }
-
   Run-Step -Title "Pushing master to origin" -Action {
     git push $remote master
   }
 
   Run-Step -Title "Pushing $releaseBranch to origin" -Action {
-    git push $remote "$releaseBranch`:$releaseBranch"
+    git push $remote "$headCommit`:refs/heads/$releaseBranch"
   }
 
   Write-Host "Release complete."
