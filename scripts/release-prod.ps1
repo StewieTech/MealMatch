@@ -17,7 +17,7 @@ function Run-Step {
     throw "Step failed: $Title"
   }
   if ($global:LASTEXITCODE -ne 0) {
-    throw "Step failed with exit code $LASTEXITCODE: $Title"
+    throw "Step failed with exit code ${LASTEXITCODE}: $Title"
   }
 }
 
