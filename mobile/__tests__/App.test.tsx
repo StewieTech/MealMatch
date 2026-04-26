@@ -55,8 +55,18 @@ jest.mock('expo-file-system/legacy', () => ({
 const App = require('../App').default;
 
 describe('App', () => {
-  it('renders the MealMatch heading', () => {
+  it('renders the Multi input chooser as landing', () => {
     const screen = render(<App />);
     expect(screen.getByText('MealMatch')).toBeTruthy();
+    expect(screen.getByText('How are you cooking today?')).toBeTruthy();
+    expect(
+      screen.getByLabelText('Take a photo of your ingredients')
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText('Record a voice note of your ingredients')
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText('Type your ingredients manually')
+    ).toBeTruthy();
   });
 });

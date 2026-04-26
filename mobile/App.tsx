@@ -2,14 +2,17 @@ import { LinkingOptions, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigatorScreenParams } from '@react-navigation/native';
 import { PhotoFlowNavigator } from './app/navigation/PhotoFlowNavigator';
 import { VoiceFlowNavigator } from './app/navigation/VoiceFlowNavigator';
-import { HomeScreen } from './app/screens/HomeScreen';
+import { MultiScreen } from './app/screens/MultiScreen';
+import type { PhotoFlowStackParamList } from './app/types/photo';
+import type { VoiceFlowStackParamList } from './app/types/voice';
 
 export type RootStackParamList = {
-  Home: undefined;
-  VoiceFlow: undefined;
-  PhotoFlow: undefined;
+  Multi: undefined;
+  VoiceFlow: NavigatorScreenParams<VoiceFlowStackParamList> | undefined;
+  PhotoFlow: NavigatorScreenParams<PhotoFlowStackParamList> | undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -18,7 +21,7 @@ const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['mealmatch://', 'http://localhost:8082', 'https://localhost:8082'],
   config: {
     screens: {
-      Home: '',
+      Multi: '',
       VoiceFlow: {
         path: 'voice',
         screens: {
@@ -46,7 +49,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer linking={linking}>
         <RootStack.Navigator screenOptions={{ headerShown: false }}>
-          <RootStack.Screen name="Home" component={HomeScreen} />
+          <RootStack.Screen name="Multi" component={MultiScreen} />
           <RootStack.Screen name="VoiceFlow" component={VoiceFlowNavigator} />
           <RootStack.Screen name="PhotoFlow" component={PhotoFlowNavigator} />
         </RootStack.Navigator>
