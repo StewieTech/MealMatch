@@ -30,6 +30,30 @@ export interface GenerateRecipesPromptFilters {
   quickMeal?: boolean;
   highProtein?: boolean;
   vegetarian?: boolean;
+  asian?: boolean;
+  mediterranean?: boolean;
+  customTags?: string[];
+}
+
+function normalizeCustomTags(tags: string[] = []): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const raw of tags) {
+    const tag = raw
+      .replace(/[\r\n`]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+      .slice(0, 32);
+
+    if (!tag || seen.has(tag)) continue;
+    seen.add(tag);
+    normalized.push(tag);
+    if (normalized.length >= 10) break;
+  }
+
+  return normalized;
 }
 
 export function buildGenerateRecipesUserPrompt(
@@ -40,10 +64,18 @@ export function buildGenerateRecipesUserPrompt(
   if (filters.quickMeal) filterLines.push('- quick meal (<= 20 minutes)');
   if (filters.highProtein) filterLines.push('- high protein');
   if (filters.vegetarian) filterLines.push('- vegetarian (no meat or fish)');
+  if (filters.asian) filterLines.push('- asian cuisine');
+  if (filters.mediterranean) filterLines.push('- mediterranean cuisine');
+
+  const customTagLines = normalizeCustomTags(filters.customTags).map((tag) => `- ${tag}`);
 
   const filterSection = filterLines.length
     ? `\n\nFilters to respect:\n${filterLines.join('\n')}`
     : '\n\nNo filters applied.';
 
-  return `Available ingredients:\n${ingredients.map((i) => `- ${i}`).join('\n')}${filterSection}\n\nReturn JSON with 4 recipes.`;
+  const customTagSection = customTagLines.length
+    ? `\n\nCustom constraints:\n${customTagLines.join('\n')}`
+    : '';
+
+  return `Available ingredients:\n${ingredients.map((i) => `- ${i}`).join('\n')}${filterSection}${customTagSection}\n\nReturn JSON with 4 recipes.`;
 }

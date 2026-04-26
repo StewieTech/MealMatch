@@ -30,6 +30,9 @@ export interface RecipeFilter {
   quickMeal?: boolean;
   highProtein?: boolean;
   vegetarian?: boolean;
+  asian?: boolean;
+  mediterranean?: boolean;
+  customTags?: string[];
 }
 
 const DEFAULT_RECIPE_COUNT = 4;
@@ -191,6 +194,9 @@ export async function generateRecipes(
       quickMeal: filters.quickMeal,
       highProtein: filters.highProtein,
       vegetarian: filters.vegetarian,
+      asian: filters.asian,
+      mediterranean: filters.mediterranean,
+      customTags: filters.customTags,
     };
 
     const response = await client.chat.completions.create({

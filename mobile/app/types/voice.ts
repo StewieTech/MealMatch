@@ -10,12 +10,18 @@ export interface RecipeFilter {
   quickMeal?: boolean;
   highProtein?: boolean;
   vegetarian?: boolean;
+  asian?: boolean;
+  mediterranean?: boolean;
+  customTags?: string[];
 }
 
 export interface NormalizedRecipeFilter {
   quickMeal: boolean;
   highProtein: boolean;
   vegetarian: boolean;
+  asian: boolean;
+  mediterranean: boolean;
+  customTags: string[];
 }
 
 export type RecipeDifficulty = 'Easy' | 'Medium' | 'Hard';

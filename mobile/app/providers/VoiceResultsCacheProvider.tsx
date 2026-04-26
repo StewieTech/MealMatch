@@ -6,8 +6,35 @@ import {
   VoiceResultsCacheStore,
 } from '../types/voice';
 
+const MAX_CUSTOM_FILTER_LENGTH = 32;
+const MAX_CUSTOM_FILTER_TAGS = 10;
+
 function normalizeIngredient(value: string) {
   return value.trim().toLowerCase();
+}
+
+function normalizeCustomTag(value: string) {
+  return value
+    .replace(/[\r\n`]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+    .slice(0, MAX_CUSTOM_FILTER_LENGTH);
+}
+
+function normalizeCustomTags(tags: string[] = []) {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const tag of tags) {
+    const next = normalizeCustomTag(tag);
+    if (!next || seen.has(next)) continue;
+    seen.add(next);
+    normalized.push(next);
+    if (normalized.length >= MAX_CUSTOM_FILTER_TAGS) break;
+  }
+
+  return normalized.sort((a, b) => a.localeCompare(b));
 }
 
 export function normalizeVoiceIngredients(ingredients: string[]) {
@@ -29,6 +56,9 @@ export function normalizeVoiceFilters(filters: RecipeFilter = {}) {
     quickMeal: Boolean(filters.quickMeal),
     highProtein: Boolean(filters.highProtein),
     vegetarian: Boolean(filters.vegetarian),
+    asian: Boolean(filters.asian),
+    mediterranean: Boolean(filters.mediterranean),
+    customTags: normalizeCustomTags(filters.customTags),
   };
 }
 

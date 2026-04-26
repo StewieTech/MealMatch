@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { app } from '../app';
+import { buildGenerateRecipesUserPrompt } from '../prompts/generate-recipes';
 import { generateRecipes } from '../services/recipe-generation.service';
 
 describe('generateRecipes service', () => {
@@ -54,5 +55,61 @@ describe('POST /recipes/generate', () => {
     expect(response.body.recipes.length).toBeGreaterThan(0);
     expect(response.body.recipes[0].title).toBeTruthy();
     expect(response.body.recipes[0].matchPercent).toBeDefined();
+  });
+});
+
+describe('buildGenerateRecipesUserPrompt', () => {
+  it('includes asian and mediterranean filter lines when enabled', () => {
+    const prompt = buildGenerateRecipesUserPrompt(['chickpeas', 'tomatoes'], {
+      asian: true,
+      mediterranean: true,
+    });
+
+    expect(prompt).toContain('- asian cuisine');
+    expect(prompt).toContain('- mediterranean cuisine');
+  });
+
+  it('adds normalized custom constraints and removes duplicates', () => {
+    const prompt = buildGenerateRecipesUserPrompt(['tofu'], {
+      customTags: ['Spicy', ' spicy ', 'low carb', 'line\nbreak', 'with`ticks`'],
+    });
+
+    expect(prompt).toContain('Custom constraints:');
+    expect(prompt).toContain('- spicy');
+    expect(prompt).toContain('- low carb');
+    expect(prompt).toContain('- line break');
+    expect(prompt).toContain('- with ticks');
+    expect(prompt.split('- spicy').length).toBe(2);
+  });
+});
+
+describe('POST /recipes/generate with extended filters', () => {
+  it('accepts new preset filters and customTags', async () => {
+    const response = await request(app)
+      .post('/recipes/generate')
+      .send({
+        ingredients: ['chicken', 'rice'],
+        filters: {
+          asian: true,
+          mediterranean: false,
+          customTags: ['spicy', 'low carb'],
+        },
+      });
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.recipes)).toBe(true);
+  });
+
+  it('rejects customTags longer than 32 characters', async () => {
+    const response = await request(app)
+      .post('/recipes/generate')
+      .send({
+        ingredients: ['chicken'],
+        filters: {
+          customTags: ['x'.repeat(33)],
+        },
+      });
+
+    expect(response.status).toBe(400);
   });
 });

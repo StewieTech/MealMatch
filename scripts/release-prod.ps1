@@ -1,8 +1,20 @@
 param(
-  [string]$Region = 'ca-central-1'
+  [string]$Region = 'ca-central-1',
+  [switch]$ReturnToOriginalBranch
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Write-RecoveryHint {
+  param([string]$OriginalBranch = '')
+
+  if ([string]::IsNullOrWhiteSpace($OriginalBranch)) {
+    Write-Warning "Tip: If state looks wrong, run 'git reflog' to recover previous HEAD state."
+    return
+  }
+
+  Write-Warning "Tip: If state looks wrong, run 'git reflog' or 'git checkout $OriginalBranch' to recover."
+}
 
 function Run-Step {
   param(
@@ -14,9 +26,11 @@ function Run-Step {
   $global:LASTEXITCODE = 0
   & $Action
   if (-not $?) {
+    Write-RecoveryHint
     throw "Step failed: $Title"
   }
   if ($global:LASTEXITCODE -ne 0) {
+    Write-RecoveryHint
     throw "Step failed with exit code ${LASTEXITCODE}: $Title"
   }
 }
@@ -28,6 +42,7 @@ function Get-TrimmedOutput {
 
   $output = & $Action
   if ($LASTEXITCODE -ne 0) {
+    Write-RecoveryHint
     throw "Command failed."
   }
   return ($output | Out-String).Trim()
@@ -56,6 +71,7 @@ function Assert-CleanWorktree {
   }
 
   if (-not [string]::IsNullOrWhiteSpace($status)) {
+    Write-RecoveryHint
     throw "Working tree is not clean. Commit or stash changes before running release."
   }
 }
@@ -66,6 +82,7 @@ function Assert-GitRepo {
   }
 
   if ($inside -ne 'true') {
+    Write-RecoveryHint
     throw "This script must be run inside a git repository."
   }
 }
@@ -88,6 +105,7 @@ Assert-CleanWorktree
 $releaseDate = (Get-Date).ToString('yyyy-MM-dd')
 $releaseBranch = "release/$releaseDate"
 $remote = 'origin'
+$releaseSucceeded = $false
 $originalBranch = Get-TrimmedOutput {
   git rev-parse --abbrev-ref HEAD
 }
@@ -99,7 +117,12 @@ try {
 
   $remoteReleaseRootSha = Get-RemoteBranchSha -Remote $remote -BranchName 'release'
   if ($remoteReleaseRootSha) {
+    Write-RecoveryHint -OriginalBranch $originalBranch
     throw "Remote branch 'release' exists. Rename/delete it before using 'release/YYYY-MM-DD' naming."
+  }
+
+  if ($originalBranch -ne 'master') {
+    Write-Warning "WARNING: You are on '$originalBranch'. This release will check out master. Your commits on '$originalBranch' remain intact and can be restored with: git checkout $originalBranch"
   }
 
   Ensure-MasterCheckedOut
@@ -136,6 +159,7 @@ try {
   if ($remoteReleaseSha) {
     & git merge-base --is-ancestor $remoteReleaseSha $headCommit | Out-Null
     if ($LASTEXITCODE -ne 0) {
+      Write-RecoveryHint -OriginalBranch $originalBranch
       throw "Remote branch '$releaseBranch' has diverged. Resolve manually before re-running."
     }
   }
@@ -148,21 +172,35 @@ try {
     git push $remote "$headCommit`:refs/heads/$releaseBranch"
   }
 
+  $releaseSucceeded = $true
   Write-Host "Release complete."
   Write-Host "master and $releaseBranch now point to $headCommit"
 } finally {
+  Write-RecoveryHint -OriginalBranch $originalBranch
+
   $currentBranch = Get-TrimmedOutput {
     git rev-parse --abbrev-ref HEAD
   }
-  if ($currentBranch -ne 'master') {
-    Run-Step -Title "Returning to master" -Action {
-      git checkout master
-    }
-  }
 
-  if ($originalBranch -eq 'master') {
-    Write-Host "Finished on master."
+  if ($releaseSucceeded -and $ReturnToOriginalBranch -and $originalBranch -ne 'master') {
+    if ($currentBranch -ne $originalBranch) {
+      Run-Step -Title "Returning to $originalBranch" -Action {
+        git checkout $originalBranch
+      }
+    }
+
+    Write-Host "Finished on '$originalBranch' (-ReturnToOriginalBranch)."
   } else {
-    Write-Host "Original branch was '$originalBranch'; intentionally left on master per release policy."
+    if ($currentBranch -ne 'master') {
+      Run-Step -Title "Returning to master" -Action {
+        git checkout master
+      }
+    }
+
+    if ($originalBranch -eq 'master') {
+      Write-Host "Finished on master."
+    } else {
+      Write-Host "Original branch was '$originalBranch'; intentionally left on master per release policy."
+    }
   }
 }

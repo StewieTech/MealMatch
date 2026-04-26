@@ -58,15 +58,15 @@ describe('App', () => {
   it('renders the Multi input chooser as landing', () => {
     const screen = render(<App />);
     expect(screen.getByText('MealMatch')).toBeTruthy();
-    expect(screen.getByText('How are you cooking today?')).toBeTruthy();
+    expect(screen.getByText('Add your ingredients')).toBeTruthy();
     expect(
-      screen.getByLabelText('Take a photo of your ingredients')
+      screen.getByLabelText('Use a photo of your ingredients to get a recipe and video')
     ).toBeTruthy();
     expect(
-      screen.getByLabelText('Record a voice note of your ingredients')
+      screen.getByLabelText('Use voice to list your ingredients and get a recipe and video')
     ).toBeTruthy();
     expect(
-      screen.getByLabelText('Type your ingredients manually')
+      screen.getByLabelText('Type your ingredients to get a recipe and video')
     ).toBeTruthy();
   });
 });

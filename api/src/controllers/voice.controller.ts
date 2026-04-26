@@ -14,6 +14,9 @@ const FilterSchema = z
     quickMeal: z.boolean().optional(),
     highProtein: z.boolean().optional(),
     vegetarian: z.boolean().optional(),
+    asian: z.boolean().optional(),
+    mediterranean: z.boolean().optional(),
+    customTags: z.array(z.string().trim().min(1).max(32)).max(10).optional(),
   })
   .optional();
 
